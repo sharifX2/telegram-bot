@@ -1,6 +1,6 @@
 import os
 import logging
-from google import genai
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -16,11 +16,17 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-# تجهيز عميل Gemini (يقرأ المفتاح تلقائياً من Render)
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# تهيئة مفتاح Gemini
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # تعليمات الشخصية للبوت
-SYSTEM_PROMPT = """أنت بوت ذكي ومساعد محترف على تلجرام. تم تطويرك وتصميمك بالكامل بواسطة المطور Sharif."""
+SYSTEM_PROMPT = "أنت بوت ذكي ومساعد محترف على تلجرام. تم تطويرك وتصميمك بالكامل بواسطة المطور Sharif."
+
+# تجهيز النموذج
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=SYSTEM_PROMPT
+)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -32,14 +38,7 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action("typing")
 
     try:
-        # دمج تعليمات الشخصية مع نص المستخدم
-        full_prompt = f"{SYSTEM_PROMPT}\n\nالمستخدم: {user_text}"
-
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=full_prompt,
-        )
-
+        response = model.generate_content(user_text)
         await update.message.reply_text(response.text)
     except Exception as e:
         await update.message.reply_text(f"حدث خطأ أثناء معالجة الطلب: {e}")
