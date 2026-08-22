@@ -1,6 +1,6 @@
 import os
 import logging
-from google import genai
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -16,12 +16,13 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-# Get & Clean Keys
+# Get Keys
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
-# Initialize Gemini Client
-client = genai.Client(api_key=GEMINI_KEY)
+# Configure Gemini
+genai.configure(api_key=GEMINI_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -33,10 +34,7 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action("typing")
 
     try:
-        response = client.models.generate_content(
-            model="gemini-3.7-flash",
-            contents=user_text,
-        )
+        response = model.generate_content(user_text)
         await update.message.reply_text(response.text)
     except Exception as e:
         await update.message.reply_text(f"حدث خطأ: {e}")
