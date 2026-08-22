@@ -33,8 +33,9 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action("typing")
 
     try:
+        # استخدام الموديل المستقر المعتمد حسابك
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=user_text,
         )
         await update.message.reply_text(response.text)
