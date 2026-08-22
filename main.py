@@ -1,6 +1,6 @@
 import os
 import logging
-import google.generativeai as genai
+from google import genai
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -10,21 +10,21 @@ from telegram.ext import (
     filters,
 )
 
-# Setup Logging
+# Logging Setup
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 
-# Get API Keys from Environment
+# Get API Keys
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
-# Configure Gemini
-genai.configure(api_key=GEMINI_KEY)
+# Initialize Gemini Client
+client = genai.Client(api_key=GEMINI_KEY)
 
-# قائمة الموديلات المعتمدة للتنقل التلقائي في حال تعثر أحدها
-MODELS_TO_TRY = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
+# الموديلات المتاحة للتجريب التلقائي
+MODELS_TO_TRY = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -35,19 +35,20 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     await update.message.reply_chat_action("typing")
 
-    # تجريب الموديلات المتاحة تلقائياً بدون إظهار أخطاء للمستخدم
     for model_name in MODELS_TO_TRY:
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(user_text)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=user_text,
+            )
             if response and response.text:
                 await update.message.reply_text(response.text)
                 return
         except Exception as e:
-            logging.error(f"Error with {model_name}: {e}")
+            logging.error(f"Failed with {model_name}: {e}")
             continue
 
-    await update.message.reply_text("عذراً، حدث خطأ أثناء الاتصال بالخدمة. يرجى المحاولة لاحقاً.")
+    await update.message.reply_text("عذراً، تعذر الاتصال بالخدمة حالياً. حاول مجدداً بعد قليل.")
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
