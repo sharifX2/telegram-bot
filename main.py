@@ -19,8 +19,10 @@ client = genai.Client(api_key=GEMINI_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "أهلاً بيك! أنا بوت الذكاء
-       async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        "أهلاً بيك! أنا بوت الذكاء الاصطناعي شريف. ابعتلي أي سؤال ونجاوبك فوراً 🚀"
+    ) # <-- هذي كانت ناقصة
+
+async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     await update.message.reply_chat_action("typing")
 
@@ -35,12 +37,3 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error: {e}")
         await update.message.reply_text(f"صار خطأ: {e}")
-
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, ai_reply))
-
-    print("البوت يخدم توا...")
-    app.run_polling() 
