@@ -16,8 +16,12 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
+# Get & Clean Keys
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+
 # Initialize Gemini Client
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client(api_key=GEMINI_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -38,7 +42,6 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"حدث خطأ: {e}")
 
 if __name__ == "__main__":
-    TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
