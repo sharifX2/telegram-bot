@@ -1,3 +1,4 @@
+import os
 import logging
 from google import genai
 from telegram import Update
@@ -15,48 +16,40 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-# تجهيز عميل Gemini
-client = genai.Client(
-    api_key="AQ.Ab8RN6L0VeeM-Ild3lwjfUu7PXAZIwmPg7dk4BmVo7uosxYYfw"
-)
+# تجهيز عميل Gemini (يقرأ المفتاح تلقائياً من Render)
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # تعليمات الشخصية للبوت
-SYSTEM_PROMPT = """[تعليمات النظام: أنت بوت ذكي ومساعد محترف على تلجرام. تم تطويرك وتصميمك بالكامل بواسطة المطور "Sharif" (sharif_2X) باستخدام Python و Gemini API. إذا سألك أي شخص عن من صممك أو طورك، أجب فوراً وبوضوح أنك من تطوير Sharif.]\n\n"""
-
+SYSTEM_PROMPT = """أنت بوت ذكي ومساعد محترف على تلجرام. تم تطويرك وتصميمك بالكامل بواسطة المطور Sharif."""
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  await update.message.reply_text(
-      "أهلاً بك! أنا بوت الذكاء الاصطناعي الخاص بـ Sharif. اسألني أي سؤال"
-      " وحأجاوك فوراً! 🤖✨"
-  )
-
+    await update.message.reply_text(
+        "أهلاً بك! أنا بوت الذكاء الاصطناعي الخاص بـ Sharif. اسألني أي سؤال وسأجيبك فوراً! 🤖✨"
+    )
 
 async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  user_text = update.message.text
-  await update.message.reply_chat_action("typing")
+    user_text = update.message.text
+    await update.message.reply_chat_action("typing")
 
-  try:
-    # دمج تعليمات الشخصية مع نص المستخدم مباشرة
-    full_prompt = SYSTEM_PROMPT + user_text
+    try:
+        # دمج تعليمات الشخصية مع نص المستخدم
+        full_prompt = f"{SYSTEM_PROMPT}\n\nالمستخدم: {user_text}"
 
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=full_prompt,
-    )
-    await update.message.reply_text(response.text)
-  except Exception as e:
-    await update.message.reply_text(f"حدث خطأ أثناء معالجة الطلب: {e}")
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=full_prompt,
+        )
 
+        await update.message.reply_text(response.text)
+    except Exception as e:
+        await update.message.reply_text(f"حدث خطأ أثناء معالجة الطلب: {e}")
 
 if __name__ == "__main__":
-  TELEGRAM_TOKEN = "8890023475:AAGQtVY5pqXQc3ciduoklUR_RJ_vSvOe3mY"
+    TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 
-  app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-  app.add_handler(CommandHandler("start", start))
-  app.add_handler(
-      MessageHandler(filters.TEXT & (~filters.COMMAND), ai_reply)
-  )
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, ai_reply))
 
-  print("بوت الذكاء الاصطناعي شغال توا...")
-  app.run_polling()
+    app.run_polling()
