@@ -35,8 +35,11 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # استخدام الموديل المستقر المعتمد
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=user_text,
+        )
+            
+            
         )
         await update.message.reply_text(response.text)
     except Exception as e:
