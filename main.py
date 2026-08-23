@@ -18,7 +18,6 @@ logging.basicConfig(
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
-# تهيئة عميل جيميناي
 client = genai.Client(api_key=GEMINI_KEY)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,9 +28,8 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action("typing")
 
     try:
-        # استخدام الموديل المستقر المعتمد
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents=user_text,
         )
         await update.message.reply_text(response.text)
